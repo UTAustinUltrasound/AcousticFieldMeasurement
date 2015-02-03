@@ -1,12 +1,14 @@
-function [ Test] = scan2D_alt( ESP, vel, PosMax, steps )
-%The purpose of this function is to implement a 2D raster scan using NI
-%motors
+function [ Test] = scan2D( ESP, vel, PosMax, steps )
+%The purpose of this function is to implement a 2D raster scan using
+%Newport motors
 %   The scan should move to the right, down 1, to the left, down 1, to the
 %   right, down 1, etc
 %   PosMax is a vector of length 2. PosMax(1) corresponds to the maximum
 %   distance to be traveled by Motor 1. 
 %   vel is a vector of length 2. vel(1) corresponds to the velocity of
 %   motor 1 (should you choose to set different velocities for the two motors.
+% Robin Hartman Jan 2015
+% Last Edit: Andrew Fowler, Feb 2015
 
 M1=[0:steps:PosMax(1)]; %Matrix with number of steps that Motor 2 will take
 M2=[0:steps:PosMax(2)]; %Matrix with number of steps that Motor 2 will take
