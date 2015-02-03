@@ -98,11 +98,15 @@ enuminfo = deviceInfo.enuminfo;
 
 %% Acquire Field - prototype
 
+f = 530000; % Frequency in Hz
+c = 1497000;% speed of sound in mm/s
+wl = c/f;   % wavelength in mm 
+
 % params for test scan
 vel = [10 10];
-width = [2.0 2.0];
-step = 0.5;
-motors = [1,2];
+width = [wl*5 wl*10];
+step = wl/4;
+motors = [1,3];
 
 % The picoData variable is a 2D cell which contains 2D matrices with the
 % dimensions LENGTH(TRACE) * NUMTRACES

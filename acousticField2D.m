@@ -23,17 +23,17 @@ initPos = [findposition(ESP,motors(1)),findposition(ESP,motors(2))];
 
 % Move to starting position for field measurement.  if Even, posititive
 % displacement, if odd, negative.
-if mod(xDim,2) == 0
-    startPos(1)= reldisplace(ESP,motors(1),((xDim-1)/2)*step);
-else
+% if mod(xDim,2) == 0
+%     startPos(1)= reldisplace(ESP,motors(1),((xDim-1)/2)*step);
+% else
     startPos(1)= reldisplace(ESP,motors(1),-((xDim-1)/2)*step);
-end
+% end
 
-if mod(yDim,2) == 0
-    startPos(2)= reldisplace(ESP,motors(2),((yDim-1)/2)*step);
-else
+% if mod(yDim,2) == 0
+%     startPos(2)= reldisplace(ESP,motors(2),((yDim-1)/2)*step);
+% else
     startPos(2)= reldisplace(ESP,motors(2),-((yDim-1)/2)*step);
-end
+% end
 %% Reference matrices, to confirm correct orientation of field and motion
 % In the end, the "Test(:,:,1)" should be a matrix of zeros
 
@@ -71,7 +71,7 @@ for ii=1:yDim % Motor 2 Loop
             pause(0.5);
             
             if jj~=xDim % If not end of Motor 1 loop, move motor
-                reldisplace(ESP,1,-step); % Move Motor 1 to left
+                reldisplace(ESP,motors(1),-step); % Move Motor 1 to left
             end
             
         else % If i is odd, moves motor to right
@@ -82,7 +82,7 @@ for ii=1:yDim % Motor 2 Loop
             pause(0.5);
             
             if jj~=xDim % If not end of Motor 1 loop, move motor
-                reldisplace(ESP,1,step);
+                reldisplace(ESP,motors(1),step);
                 pause(0.1)% Move Motor 1 to right
             end
         end
@@ -90,7 +90,7 @@ for ii=1:yDim % Motor 2 Loop
     end
     
     if ii~=yDim % If not end of Motor 2 loop
-        reldisplace(ESP,2,step);
+        reldisplace(ESP,motors(2),step);
         pause(0.1)% Move Motor 2
     end
     
@@ -98,10 +98,11 @@ end
 
 %% Send motors to 0 (not necessarily starting position)
 for ii=1:2
-    moveto(ESP,ii,0)
+    moveto(ESP,motors(ii),0)
 end
 
-picoData.t = waveform.t;
+picoData.t = waveform.t; % Time in ns
+picoData.step = step;    % step in mm
 
 %% Send motors to starting position (might be useful for 3D scan)
 % for i=1:2
