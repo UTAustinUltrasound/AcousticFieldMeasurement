@@ -1,0 +1,104 @@
+function [ ulat, uelev, uax ] = StepCalc_structs( p1, p2, axdir, xLen, yLen, zLen)
+% Function to calculate steps in rotated field. A rotation vector and
+% angle are calculated between the vector determined by p1 and p2 
+% (assumed to be the axial direction) and the x, y, or z axis of the motors 
+% (as determined by axdir) using the MATLAB function vrrotvec which produces a
+% 4 element vector. The first three elements are the unit vector of
+% rotation and the last element is the angle of rotation in radians. This
+% is then used to rotate the x, y, and z axes into the new rotated space.
+% The resulting z axis is the unit vector pointing from the origin (p2) to the
+% calculated max (p1). 
+
+% **NOTE: THIS FUNCTION ASSUMES NO YAW (rotation around axial axis). THIS
+% WILL NEED TO BE TAKEN INTO ACCOUNT FOR ARRAY TRANSDUCERS
+
+% Inputs
+%   p1 is the calculated coordinates of the maximum of the initial 2D field
+%   p2 is the origin [0,0,0] or initial maximum (found manually)
+%   axdir is a structure with compnents ax, lat, and elev. Possible values are
+%   1, 2 or 3 corresponding to the x, y, and z axes (motors 1, 2, and 3)
+%   xLen = maximum range of Motor 1
+%   yLen = maximum range of Motor 2
+%   zLen = maximum range of Motor 3
+
+% Outputs
+%   ulat is a three element structure consisting of the x, y, and z steps
+%   required for a 1 mm step in the lateral direction
+%   uelev is a three element structure consisting of the x, y, and z steps
+%   required for a 1 mm step in the elevational direction
+%   uax is a three element structure consisting of the x, y, and z steps
+%   required for a 1 mm step in the axial direction
+
+% Written by Robin Hartman
+% 02/09/15
+
+%%  Error checking code from Heechul
+fError = false;
+
+if (p1.x<-xLen || p1.x>xLen) || (p1.y<-yLen || p1.y>yLen) || (p1.z<-zLen || p1.z>zLen)
+    errordlg('Measured p1 is out of range!!');
+    fError = true;
+end
+if (p2.x<-xLen || p2.x>xLen) || (p2.y<-yLen || p2.y>yLen) || (p2.z<-zLen || p2.z>zLen)
+    errordlg('Measured p2 is out of range!!');
+    fError = true;
+end
+if (p1.z < p2.z)
+    errordlg('First point should be higher in axial direction!!');
+    fError = true;
+end
+if ((axdir.ax==axdir.lat) || (axdir.ax==axdir.elev) || (axdir.lat==axdir.elev))
+    errordlg('direction of axes must be unique!!')
+    ferror = true
+end
+
+if ~fError
+    %% Define the initial axes as unit vectors
+    names={'xax' 'yax' 'zax'};
+    axes.xax=[0; 1; 0;];
+    axes.yax=[1; 0; 0;];
+    axes.zax=[0; 0; 1;];
+
+    %% Calculate rotated z axis
+    dc.x = p1.x-p2.x;
+    dc.y = p1.y-p2.y;
+    dc.z = p1.z-p2.z;
+
+    udc.x = dc.x / sqrt(dc.x.^2+dc.y.^2+dc.z.^2);
+    udc.y = dc.y / sqrt(dc.x.^2+dc.y.^2+dc.z.^2);
+    udc.z = dc.z / sqrt(dc.x.^2+dc.y.^2+dc.z.^2);
+
+    uvect=[udc.x; udc.y; udc.z];
+    
+    %% Calculate axis and angle of rotation
+    rotvec=vrrotvec(axes.(names{axdir.ax}),uvect);
+
+    ur.x=rotvec(2);
+    ur.y=rotvec(1);
+    ur.z=rotvec(3);
+    theta=rotvec(4)*180/pi;
+
+    %% Calculate rotation matrix
+    Rot=[cosd(theta)+ur.x^2*(1-cosd(theta)), ur.x*ur.y*(1-cosd(theta))-ur.z*sind(theta), ur.x*ur.z*(1-cosd(theta))+ur.y*sind(theta);...
+         ur.y*ur.x*(1-cosd(theta))+ur.z*sind(theta), cosd(theta)+ur.y^2*(1-cosd(theta)), ur.y*ur.z*(1-cosd(theta))-ur.y*sind(theta);...
+         ur.z*ur.x*(1-cosd(theta))-ur.y*sind(theta), ur.z*ur.y*(1-cosd(theta))+ur.x*sind(theta), cosd(theta)+ur.z^2*(1-cosd(theta));];
+
+    %% Apply rotation matrix to x and y axes (already have z)
+    latnew=Rot*axes.(names{axdir.lat});
+    elevnew=Rot*axes.(names{axdir.elev});
+
+    %% Calculate step unit vectors
+    % One step in x direction
+    ulat.x=latnew(2);
+    ulat.y=latnew(1);
+    ulat.z=latnew(3);
+    
+    % One step in y direction
+    uelev.x=elevnew(2);
+    uelev.y=elevnew(1);
+    uelev.z=elevnew(3);
+    
+    % One step in z direction is the initial unit vector
+    uax=udc;
+end
+end
